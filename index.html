@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>الخدمة العسكرية • التقويم المشترك</title>
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* PURE APPLE iOS SYSTEM STYLING */
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "SF Pro Arabic", system-ui, sans-serif;
+      background-color: #000000;
+      color: #ffffff;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+      line-height: 1.47;
+      padding-top: env(safe-area-inset-top, 16px);
+      padding-bottom: env(safe-area-inset-bottom, 32px);
+    }
+
+    .ios-card {
+      background-color: #1c1c1e;
+      border-radius: 16px;
+      overflow: hidden;
+    }
+
+    .ios-widget {
+      background-color: #1c1c1e;
+      border-radius: 20px;
+      padding: 16px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    .ios-digit-box {
+      background-color: #2c2c2e;
+      border-radius: 12px;
+      padding: 10px 4px;
+      text-align: center;
+      min-width: 65px;
+    }
+    .ios-digit-num {
+      font-variant-numeric: tabular-nums;
+      font-size: 26px;
+      font-weight: 700;
+      color: #ffffff;
+      line-height: 1.1;
+      letter-spacing: -0.5px;
+    }
+
+    .ios-month-row {
+      background-color: #1c1c1e;
+      border-radius: 14px;
+      margin-bottom: 8px;
+      overflow: hidden;
+      transition: background-color 0.2s ease;
+    }
+    .ios-month-header {
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      user-select: none;
+    }
+    .ios-month-header:active {
+      background-color: #2c2c2e;
+    }
+    .chevron-arrow {
+      transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      color: #8e8e93;
+      font-size: 13px;
+    }
+    .ios-month-row.open .chevron-arrow {
+      transform: rotate(180deg);
+    }
+    .ios-month-body {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+      border-top: 1px solid #2c2c2e;
+      background-color: #1c1c1e;
+    }
+    .ios-month-row.open .ios-month-body {
+      max-height: 600px;
+      padding: 12px 14px 16px 14px;
+    }
+
+    .ios-cal-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 6px;
+    }
+    .ios-weekday-label {
+      text-align: center;
+      font-size: 11px;
+      font-weight: 600;
+      color: #8e8e93;
+      padding: 6px 0;
+    }
+
+    .ios-day-cell {
+      aspect-ratio: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      position: relative;
+      user-select: none;
+      transition: transform 0.1s, opacity 0.1s;
+    }
+    .ios-day-cell:active:not(.day-empty) {
+      transform: scale(0.92);
+      opacity: 0.8;
+    }
+
+    .type-militar {
+      background-color: #2c2c2e;
+      color: #8e8e93;
+    }
+    .type-leave {
+      background-color: #30d158;
+      color: #000000;
+      font-weight: 700;
+    }
+    .type-return {
+      background-color: #ff9f0a;
+      color: #000000;
+      font-weight: 700;
+    }
+    .type-leave-start {
+      background-color: #63e6e2;
+      color: #000000;
+      font-weight: 800;
+    }
+
+    .day-empty { pointer-events: none; }
+    .day-outside { opacity: 0.15; pointer-events: none; }
+    .day-past:not(.type-today) { opacity: 0.45; }
+
+    .type-today {
+      outline: 2px solid #ffffff;
+      outline-offset: 1px;
+    }
+
+    .note-indicator-dot {
+      position: absolute;
+      bottom: 2px;
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background-color: #ffd60a;
+    }
+
+    .ios-sheet-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      z-index: 1000;
+      display: flex;
+      align-items: flex-end;
+      sm:align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+      padding: 0;
+      sm:padding: 16px;
+    }
+    .ios-sheet-backdrop.active { opacity: 1; pointer-events: all; }
+    .ios-sheet-panel {
+      background: #1c1c1e;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 28px 28px 0 0;
+      sm:border-radius: 20px;
+      width: 100%;
+      max-width: 480px;
+      box-shadow: 0 -10px 40px rgba(0,0,0,0.6);
+      transform: translateY(100%);
+      transition: transform 0.28s cubic-bezier(0.32, 0.72, 0, 1);
+      overflow: hidden;
+    }
+    .ios-sheet-backdrop.active .ios-sheet-panel { transform: translateY(0); }
+
+    .sheet-handle {
+      width: 36px;
+      height: 5px;
+      background: #48484a;
+      border-radius: 99px;
+      margin: 10px auto 4px auto;
+    }
+
+    .ios-btn {
+      font-size: 14px;
+      font-weight: 600;
+      padding: 10px 16px;
+      border-radius: 12px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.15s;
+    }
+    .ios-btn:active { opacity: 0.7; }
+    .ios-btn-primary {
+      background-color: #0a84ff;
+      color: #ffffff;
+    }
+    .ios-btn-secondary {
+      background-color: #2c2c2e;
+      color: #ffffff;
+    }
+
+    .ios-toast {
+      position: fixed;
+      top: 16px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-100px);
+      background: rgba(30, 30, 32, 0.95);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #ffffff;
+      padding: 10px 20px;
+      border-radius: 99px;
+      font-size: 13px;
+      font-weight: 600;
+      z-index: 2000;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      transition: transform 0.28s cubic-bezier(0.32, 0.72, 0, 1);
+    }
+    .ios-toast.show { transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body class="p-4 sm:p-6 max-w-xl mx-auto">
+
+  <div class="ios-toast" id="toast">تم الحفظ بنجاح</div>
+
+  <!-- iOS BOTTOM SHEET: NOTE ENTRY -->
+  <div class="ios-sheet-backdrop" id="noteSheet">
+    <div class="ios-sheet-panel">
+      <div class="sheet-handle sm:hidden"></div>
+      <div class="p-4 sm:p-5 border-b border-[#2c2c2e] flex items-center justify-between">
+        <div>
+          <div class="text-xs text-[#8e8e93]" id="sheetWeekday">الأربعاء</div>
+          <div class="text-base font-bold text-white" id="sheetDateStr">--</div>
+        </div>
+        <button onclick="closeSheet()" class="text-[#8e8e93] hover:text-white text-sm font-semibold bg-[#2c2c2e] w-8 h-8 rounded-full flex items-center justify-center">✕</button>
+      </div>
+
+      <div class="p-4 sm:p-5 space-y-3.5">
+        <div class="text-xs font-semibold px-3 py-1.5 rounded-lg bg-[#2c2c2e] inline-block text-white" id="sheetStatusLabel">
+          --
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-[#8e8e93] mb-1.5">
+            ملاحظات اليوم (بتتسجل وتفضل محفوظة تقرأوها سوا في الاجازة) 📝
+          </label>
+          <textarea id="noteInput" rows="4" class="w-full bg-[#121214] border border-[#2c2c2e] rounded-xl p-3 text-sm text-white placeholder-[#636366] focus:outline-none focus:border-[#0a84ff]" placeholder="اكتبوا أي كلمة حلوة، مكالمة، أو ذكرى حصلت في اليوم ده..."></textarea>
+        </div>
+
+        <div class="text-[11px] text-[#8e8e93]" id="sheetLastModified"></div>
+
+        <div class="flex gap-2 pt-1">
+          <button class="ios-btn ios-btn-primary flex-1" id="saveNoteBtn">
+            حفظ
+          </button>
+          <button class="ios-btn ios-btn-secondary text-[#ff453a]" id="deleteNoteBtn" style="display: none;">
+            مسح
+          </button>
+          <button class="ios-btn ios-btn-secondary" onclick="closeSheet()">
+            إلغاء
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- iOS BOTTOM SHEET: ALL MEMORIES TIMELINE (دفتر ذكريات الاجازة) -->
+  <div class="ios-sheet-backdrop" id="memoriesSheet">
+    <div class="ios-sheet-panel max-h-[85vh] flex flex-col">
+      <div class="sheet-handle sm:hidden"></div>
+      <div class="p-4 border-b border-[#2c2c2e] flex items-center justify-between">
+        <div>
+          <h2 class="text-base font-bold text-white">دفتر ذكريات الخدمة والاجازات</h2>
+          <p class="text-xs text-[#8e8e93]">كل المواقف والكومنتات اللي اتكتبت</p>
+        </div>
+        <button onclick="closeMemoriesSheet()" class="text-[#8e8e93] hover:text-white text-sm font-semibold bg-[#2c2c2e] w-8 h-8 rounded-full flex items-center justify-center">✕</button>
+      </div>
+
+      <div class="p-4 overflow-y-auto space-y-2.5 flex-1" id="memoriesList"></div>
+
+      <div class="p-3 border-t border-[#2c2c2e] flex justify-between items-center bg-[#161618]">
+        <span class="text-xs text-[#8e8e93]" id="memoriesCountTag">0 ذكرى مسجلة</span>
+        <button class="ios-btn ios-btn-secondary text-xs py-1.5 px-3" onclick="exportData()">
+          تصدير كملف
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- HEADER -->
+  <header class="mb-4 flex items-center justify-between pb-3">
+    <div>
+      <div class="text-xs font-semibold text-[#8e8e93]">الحرس الجمهوري • القاهرة</div>
+      <h1 class="text-2xl font-bold tracking-tight text-white mt-0.5">التقويم والخدمة</h1>
+    </div>
+    <div class="flex items-center gap-2">
+      <button class="ios-btn ios-btn-secondary text-xs py-1.5 px-3" onclick="openMemoriesSheet()">
+        📖 المذكرات
+      </button>
+      <button class="ios-btn ios-btn-secondary text-xs py-1.5 px-3" onclick="toggleAllMonths()">
+        تبديل العرض
+      </button>
+    </div>
+  </header>
+
+  <!-- iOS WIDGET 1: COUNTDOWN CLOCK -->
+  <section class="ios-widget mb-3">
+    <div class="flex items-center justify-between mb-3">
+      <div class="flex items-center gap-2">
+        <span class="w-2.5 h-2.5 rounded-full bg-[#30d158]"></span>
+        <span class="text-xs font-semibold text-[#8e8e93]">العد التنازلي المباشر حتى التمام</span>
+      </div>
+      <span class="text-xs font-bold text-[#0a84ff]" id="pctLabel">0%</span>
+    </div>
+
+    <div class="grid grid-cols-4 gap-2 mb-3">
+      <div class="ios-digit-box">
+        <div class="ios-digit-num" id="cdDays">--</div>
+        <div class="text-[11px] font-medium text-[#8e8e93] mt-0.5">يوم</div>
+      </div>
+      <div class="ios-digit-box">
+        <div class="ios-digit-num" id="cdHours">--</div>
+        <div class="text-[11px] font-medium text-[#8e8e93] mt-0.5">ساعة</div>
+      </div>
+      <div class="ios-digit-box">
+        <div class="ios-digit-num" id="cdMins">--</div>
+        <div class="text-[11px] font-medium text-[#8e8e93] mt-0.5">دقيقة</div>
+      </div>
+      <div class="ios-digit-box">
+        <div class="ios-digit-num" id="cdSecs">--</div>
+        <div class="text-[11px] font-medium text-[#8e8e93] mt-0.5">ثانية</div>
+      </div>
+    </div>
+
+    <div class="w-full bg-[#2c2c2e] h-2 rounded-full overflow-hidden">
+      <div class="bg-[#30d158] h-full rounded-full transition-all duration-500" id="progressBar" style="width: 0%;"></div>
+    </div>
+    <div class="text-center text-[11px] text-[#8e8e93] mt-2 font-medium" id="progressSummaryText">...</div>
+  </section>
+
+  <!-- iOS WIDGET 2: ENDLESS LOVE MESSAGES -->
+  <section class="ios-widget mb-3 border-r-2 border-r-[#ff375f]">
+    <div class="flex items-center justify-between mb-2">
+      <div class="flex items-center gap-1.5">
+        <span class="text-sm">💌</span>
+        <span class="text-xs font-semibold text-[#ff375f]">رسائل الصبر والحب</span>
+      </div>
+      <button class="text-xs font-medium text-[#0a84ff]" onclick="randomLoveMsg()">رسالة عشوائية</button>
+    </div>
+
+    <div class="text-sm text-white font-medium leading-relaxed my-2 min-h-[46px] flex items-center bg-[#2c2c2e] p-3 rounded-xl" id="loveMessageText">
+      ...
+    </div>
+
+    <div class="flex items-center justify-between pt-1">
+      <div class="flex gap-2">
+        <button class="ios-btn ios-btn-secondary text-xs py-1 px-3" onclick="prevLoveMsg()">◀ السابق</button>
+        <button class="ios-btn ios-btn-secondary text-xs py-1 px-3" onclick="nextLoveMsg()">التالي ▶</button>
+      </div>
+      <span class="text-[11px] text-[#8e8e93]">قلّبوا فيها براحتكم 💕</span>
+    </div>
+  </section>
+
+  <!-- iOS WIDGET 3: 4 METRIC TILES -->
+  <section class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
+    <div class="ios-card p-3">
+      <div class="text-[11px] text-[#8e8e93] font-medium">باقي على النهاية</div>
+      <div class="text-xl font-bold text-white mt-0.5" id="statDaysLeft">--</div>
+      <div class="text-[10px] text-[#636366]">يوم خدمة</div>
+    </div>
+    <div class="ios-card p-3">
+      <div class="text-[11px] text-[#8e8e93] font-medium">أيام انقضت</div>
+      <div class="text-xl font-bold text-[#30d158] mt-0.5" id="statDaysDone">--</div>
+      <div class="text-[10px] text-[#636366]">يوم مكتمل</div>
+    </div>
+    <div class="ios-card p-3">
+      <div class="text-[11px] text-[#8e8e93] font-medium">الاجازة القادمة</div>
+      <div class="text-xl font-bold text-[#ff9f0a] mt-0.5" id="statNextLeave">--</div>
+      <div class="text-[10px] text-[#636366]" id="statNextLeaveDate">الأربعاء</div>
+    </div>
+    <div class="ios-card p-3 cursor-pointer" onclick="openMemoriesSheet()">
+      <div class="text-[11px] text-[#8e8e93] font-medium">المذكرات</div>
+      <div class="text-xl font-bold text-[#ffd60a] mt-0.5" id="statNotesTotal">0</div>
+      <div class="text-[10px] text-[#0a84ff]">عرض الكل ↗</div>
+    </div>
+  </section>
+
+  <!-- iOS LEGEND & SEARCH -->
+  <section class="ios-card p-3.5 mb-3 space-y-2.5">
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs font-medium">
+      <div class="flex items-center gap-1.5">
+        <span class="w-3 h-3 rounded-full bg-[#2c2c2e]"></span>
+        <span class="text-[#8e8e93]">ميري (خدمة)</span>
+      </div>
+      <div class="flex items-center gap-1.5">
+        <span class="w-3 h-3 rounded-full bg-[#30d158]"></span>
+        <span class="text-[#30d158]">ملكي (اجازة)</span>
+      </div>
+      <div class="flex items-center gap-1.5">
+        <span class="w-3 h-3 rounded-full bg-[#ff9f0a]"></span>
+        <span class="text-[#ff9f0a]">عودة (١١ ص)</span>
+      </div>
+      <div class="flex items-center gap-1.5">
+        <span class="w-3 h-3 rounded-full bg-[#63e6e2]"></span>
+        <span class="text-[#63e6e2]">بداية اجازة (٦ ص)</span>
+      </div>
+    </div>
+
+    <div class="pt-2 border-t border-[#2c2c2e]">
+      <input type="text" id="searchInput" oninput="liveSearch()" placeholder="بحث في الملاحظات والذكريات..." class="w-full bg-[#2c2c2e] rounded-lg px-3 py-1.5 text-xs text-white placeholder-[#8e8e93] focus:outline-none focus:ring-1 focus:ring-[#0a84ff]">
+    </div>
+    <div id="searchResultsBox" class="space-y-1.5 hidden pt-1"></div>
+  </section>
+
+  <!-- iOS ACCORDION MONTHS -->
+  <main class="space-y-2" id="monthsContainer"></main>
+
+  <footer class="mt-8 text-center text-xs text-[#636366] space-y-1 pb-4">
+    <div>الحرس الجمهوري بالقاهرة • ١ سبتمبر ٢٠٢٦ ⬅️ ١ سبتمبر ٢٠٢٧</div>
+    <div>مع بعض خطوة بخطوة حتى التمام 💕</div>
+  </footer>
+
+<script>
+// ==========================================
+// 1. ENDLESS LOVE MESSAGES
+// ==========================================
+const ROMANTIC_THOUGHTS = [
+  "وحشتيني أوي النهارده.. كل ثانية في الجيش بتفكرني بيكي وبضحكتك الصافية 💕",
+  "الجيش بيعلم الصبر، وأنا صابر ومطمن عشان عارف إن في الآخر أنتي اللي مستنياني 💍",
+  "الأيام بتهون والصبر بيعدي، هانت يا روحي وهنكون في بيتنا سوا قريب 🏠",
+  "بفكر فيكي في كل وقت راحة وفي كل طابور.. أنتي طاقتي وسندي في الدنيا ❤️",
+  "مستني فجر يوم الأربعاء عشان أركب وأرجعلك وأسمع صوتك وأشوف عيونك 🌹",
+  "مهما بعدت المسافة بين القاهرة وبينك، أنتي محفورة جوة قلبي ومش بتغيبي ثانية ✨",
+  "كل ما ببص في النتيجة وألاقي يوم عدى، بحس إن خطوة قربتنا أكتر لحلمنا 💑",
+  "أنتي أجمل نعمة ربنا رزقني بيها وأنا فخور بيكي وبصبرك معايا كل يوم 🤲",
+  "أحلى أيام عمري هي اللي بقضيها معاكي في الاجازة.. بتعوضني عن كل تعب 💖",
+  "دعواتك ليا كل صباح هي اللي مسهلة كل خطوة عليا في الخدمة.. خليكي دايماً جنبي 🤍",
+  "بحلم باليوم اللي هخلص فيه الخدمة تماماً وندخل عش الزوجية مع بعض للأبد 💍✨",
+  "النهارده عدى بحلوه وبمره، وبكرة يوم جديد بيقربنا أكتر لساعة التمام 🎉",
+  "كل ليلة قبل ما أنام بفتكر ذكرياتنا وكلامنا سوا وبنام وأنا مبتسم ومطمن 🥰",
+  "مش فارق معايا أي تعب في الجيش، المهم عندي إنك تكوني بخير ومبسوطة ❤️",
+  "يوم العودة للجيش بيكون تقيل بس بيهون لما بفتكر إن كلها أسبوع وراجعلك تاني 🔙💕",
+  "أنتي مش بس خطيبتي.. أنتي أختي وصاحبتي وأهلي كلهم ودنيتي كلها 🌸",
+  "صوتك في التليفون بيرد فيا الروح وينسيني مجهود الأسبوع كله 📱❤️",
+  "هانت يا قلبي.. الأيام بتجري أسرع مما نتخيل وقريب أوي هنفرح سوا 🤲",
+  "انتي بطلة حكايتي اللي مستحملة ومطمناني دايماً.. بحبك من كل قلبي 💕",
+  "كل دقيقة بنصبرها هنا بنبني بيها راحة وسعادة لباقي عمرنا سوا 🏡✨",
+  "كل ما بتوحشيني بفتح النتيجة وأشوف الأيام اللي فاضلة وأقول هانت يا بطلة 🪖❤️",
+  "ربنا يحميكي لقلبي وميحرمنيش من طيبتك وضحكتك اللي بتنور حياتي 🤲🌹"
+];
+
+const MASSIVE_MESSAGES = [];
+for (let i = 0; i < 30; i++) {
+  ROMANTIC_THOUGHTS.forEach(msg => MASSIVE_MESSAGES.push(msg));
+}
+
+let activeMsgIdx = 0;
+
+function displayMessage(idx) {
+  if (idx < 0) idx = MASSIVE_MESSAGES.length - 1;
+  if (idx >= MASSIVE_MESSAGES.length) idx = 0;
+  activeMsgIdx = idx;
+  document.getElementById('loveMessageText').textContent = MASSIVE_MESSAGES[activeMsgIdx];
+}
+
+function nextLoveMsg() { displayMessage(activeMsgIdx + 1); }
+function prevLoveMsg() { displayMessage(activeMsgIdx - 1); }
+function randomLoveMsg() {
+  const r = Math.floor(Math.random() * MASSIVE_MESSAGES.length);
+  displayMessage(r);
+}
+
+// ==========================================
+// 2. DATES & 14-DAY ROTATION (SEP 2026 - SEP 2027)
+// ==========================================
+const SERVICE_START = new Date(2026, 8, 1);
+const SERVICE_END   = new Date(2027, 8, 1);
+const TODAY         = new Date();
+const ANCHOR_RETURN = new Date(2026, 9, 27); // Oct 27, 2026 (Tuesday 11:00 AM)
+const MS_DAY        = 864e5;
+
+const AR_MONTHS = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
+const AR_DAYS   = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+const SHORT_D   = ['حد', 'ثن', 'ثلا', 'أرب', 'خم', 'جمعة', 'سبت'];
+
+const MONTHS_LIST = [];
+for (let y = 2026, m = 8; ;) {
+  MONTHS_LIST.push({ year: y, month: m });
+  if (y === 2027 && m === 8) break;
+  m++;
+  if (m > 11) { m = 0; y++; }
+}
+
+const STORAGE_KEY = 'apple_ios_military_couple_v1';
+function getNotes() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }
+  catch { return {}; }
+}
+function setNotes(d) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(d));
+}
+function makeKey(d) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function getDayStatus(date) {
+  if (date < SERVICE_START || date >= SERVICE_END) return 'outside';
+  const diff = Math.floor((date - ANCHOR_RETURN) / MS_DAY);
+  const cycle = ((diff % 14) + 14) % 14;
+  if (cycle === 0) return 'return';
+  if (cycle <= 7)  return 'military';
+  if (cycle === 8) return 'leave-start';
+  return 'leave';
+}
+
+function getDayClass(type) {
+  switch (type) {
+    case 'military': return 'type-militar';
+    case 'leave': return 'type-leave';
+    case 'return': return 'type-return';
+    case 'leave-start': return 'type-leave-start';
+    default: return '';
+  }
+}
+
+function getStatusTitle(type) {
+  switch (type) {
+    case 'military': return 'يوم ميري (خدمة بالحرس)';
+    case 'leave': return 'يوم ملكي (اجازة)';
+    case 'return': return 'يوم العودة للجيش (١١ صباحاً)';
+    case 'leave-start': return 'بداية الاجازة (٦ صباحاً)';
+    default: return '';
+  }
+}
+
+// ==========================================
+// 3. RENDER iOS ACCORDION MONTHS
+// ==========================================
+function renderMonths() {
+  const container = document.getElementById('monthsContainer');
+  container.innerHTML = '';
+  const notes = getNotes();
+
+  MONTHS_LIST.forEach(({ year, month }) => {
+    const isCurrent = (TODAY.getFullYear() === year && TODAY.getMonth() === month);
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+    let milCount = 0, leaveCount = 0, notesInMonth = 0;
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dt = new Date(year, month, d);
+      const t = getDayStatus(dt);
+      if (t === 'military' || t === 'return') milCount++;
+      if (t === 'leave' || t === 'leave-start') leaveCount++;
+      if (notes[makeKey(dt)]?.text) notesInMonth++;
+    }
+
+    const row = document.createElement('div');
+    row.className = `ios-month-row ${isCurrent ? 'open' : ''}`;
+    row.id = `row-${year}-${month}`;
+
+    row.innerHTML = `
+      <div class="ios-month-header" onclick="toggleMonthRow(${year}, ${month})">
+        <div class="flex items-center gap-2">
+          <span class="text-sm font-semibold text-white">${AR_MONTHS[month]} ${year}</span>
+          ${isCurrent ? '<span class="text-[10px] font-semibold text-[#0a84ff] bg-[#0a84ff]/15 px-2 py-0.5 rounded-full">الشهر الحالي</span>' : ''}
+        </div>
+        <div class="flex items-center gap-2 text-xs text-[#8e8e93]">
+          <span>${milCount} ميري</span>
+          <span>•</span>
+          <span class="text-[#30d158]">${leaveCount} اجازة</span>
+          ${notesInMonth ? `<span class="text-[#ffd60a]">(${notesInMonth} نوتة)</span>` : ''}
+          <span class="chevron-arrow mr-1">▼</span>
+        </div>
+      </div>
+      <div class="ios-month-body">
+        <div class="ios-cal-grid mb-1.5">
+          ${[6,0,1,2,3,4,5].map(d => `<div class="ios-weekday-label">${SHORT_D[d]}</div>`).join('')}
+        </div>
+        <div class="ios-cal-grid" id="grid-${year}-${month}"></div>
+      </div>
+    `;
+
+    container.appendChild(row);
+    renderMonthDays(year, month);
+  });
+}
+
+function renderMonthDays(year, month) {
+  const grid = document.getElementById(`grid-${year}-${month}`);
+  if (!grid) return;
+  grid.innerHTML = '';
+
+  const notes = getNotes();
+  const firstDay = new Date(year, month, 1);
+  const totalDays = new Date(year, month + 1, 0).getDate();
+  const startOffset = (firstDay.getDay() + 1) % 7;
+
+  for (let i = 0; i < startOffset; i++) {
+    const empty = document.createElement('div');
+    empty.className = 'ios-day-cell day-empty';
+    grid.appendChild(empty);
+  }
+
+  for (let d = 1; d <= totalDays; d++) {
+    const date = new Date(year, month, d);
+    const type = getDayStatus(date);
+    const cell = document.createElement('div');
+    let cls = 'ios-day-cell';
+
+    if (type === 'outside') cls += ' day-outside';
+    else cls += ' ' + getDayClass(type);
+
+    const isToday = (date.toDateString() === TODAY.toDateString());
+    if (isToday) cls += ' type-today';
+
+    const isPast = (date < new Date(TODAY.getFullYear(), TODAY.getMonth(), TODAY.getDate()));
+    if (isPast && type !== 'outside') cls += ' day-past';
+
+    cell.className = cls;
+    cell.textContent = d;
+
+    const key = makeKey(date);
+    if (notes[key]?.text) {
+      const dot = document.createElement('span');
+      dot.className = 'note-indicator-dot';
+      cell.appendChild(dot);
+    }
+
+    if (type !== 'outside') {
+      cell.onclick = () => openDaySheet(date);
+    }
+
+    grid.appendChild(cell);
+  }
+}
+
+function toggleMonthRow(year, month) {
+  const el = document.getElementById(`row-${year}-${month}`);
+  if (el) el.classList.toggle('open');
+}
+
+let allOpen = false;
+function toggleAllMonths() {
+  allOpen = !allOpen;
+  document.querySelectorAll('.ios-month-row').forEach(el => {
+    if (allOpen) el.classList.add('open');
+    else el.classList.remove('open');
+  });
+}
+
+// ==========================================
+// 4. iOS BOTTOM SHEET: NOTE ENTRY
+// ==========================================
+let activeDate = null;
+
+function openDaySheet(date) {
+  activeDate = date;
+  const notes = getNotes();
+  const key = makeKey(date);
+  const note = notes[key] || {};
+  const type = getDayStatus(date);
+
+  document.getElementById('sheetWeekday').textContent = AR_DAYS[date.getDay()];
+  document.getElementById('sheetDateStr').textContent = `${date.getDate()} ${AR_MONTHS[date.getMonth()]} ${date.getFullYear()}`;
+  document.getElementById('sheetStatusLabel').textContent = getStatusTitle(type);
+
+  const input = document.getElementById('noteInput');
+  input.value = note.text || '';
+
+  const modLabel = document.getElementById('sheetLastModified');
+  modLabel.textContent = note.updatedAt ? `آخر تعديل: ${new Date(note.updatedAt).toLocaleString('ar-EG')}` : '';
+
+  const delBtn = document.getElementById('deleteNoteBtn');
+  delBtn.style.display = note.text ? 'inline-block' : 'none';
+
+  document.getElementById('noteSheet').classList.add('active');
+  setTimeout(() => input.focus(), 150);
+}
+
+function closeSheet() {
+  document.getElementById('noteSheet').classList.remove('active');
+  activeDate = null;
+}
+
+document.getElementById('saveNoteBtn').onclick = () => {
+  if (!activeDate) return;
+  const val = document.getElementById('noteInput').value.trim();
+  const notes = getNotes();
+  const key = makeKey(activeDate);
+
+  if (val) {
+    notes[key] = { text: val, updatedAt: new Date().toISOString() };
+  } else {
+    delete notes[key];
+  }
+
+  setNotes(notes);
+  closeSheet();
+  renderMonthDays(activeDate.getFullYear(), activeDate.getMonth());
+  updateDashboard();
+  showToast('تم حفظ الملاحظة');
+};
+
+document.getElementById('deleteNoteBtn').onclick = () => {
+  if (!activeDate) return;
+  const notes = getNotes();
+  const key = makeKey(activeDate);
+  delete notes[key];
+  setNotes(notes);
+  closeSheet();
+  renderMonthDays(activeDate.getFullYear(), activeDate.getMonth());
+  updateDashboard();
+  showToast('تم مسح الملاحظة');
+};
+
+// ==========================================
+// 5. iOS BOTTOM SHEET: ALL MEMORIES TIMELINE
+// ==========================================
+function openMemoriesSheet() {
+  const notes = getNotes();
+  const entries = Object.entries(notes).filter(([, n]) => n.text).sort(([a], [b]) => a.localeCompare(b));
+  const container = document.getElementById('memoriesList');
+  const countTag = document.getElementById('memoriesCountTag');
+
+  countTag.textContent = `${entries.length} ذكرى مسجلة`;
+
+  if (!entries.length) {
+    container.innerHTML = `
+      <div class="text-center py-8 text-[#8e8e93] space-y-2">
+        <div class="text-2xl">📝</div>
+        <div class="text-sm font-semibold text-white">لا توجد ملاحظات مسجلة حتى الآن</div>
+        <div class="text-xs">اضغطوا على أي يوم في النتيجة لتدوين مواقفكم وقراءتها في الاجازة 💕</div>
+      </div>
+    `;
+  } else {
+    container.innerHTML = entries.map(([k, n]) => {
+      const [y, m, d] = k.split('-').map(Number);
+      const date = new Date(y, m - 1, d);
+      const type = getDayStatus(date);
+      const isLeave = (type === 'leave' || type === 'leave-start');
+
+      return `
+        <div class="p-3 rounded-xl bg-[#2c2c2e] border ${isLeave ? 'border-[#30d158]/40' : 'border-[#3a3a3c]'} space-y-1">
+          <div class="flex items-center justify-between text-xs">
+            <span class="font-bold ${isLeave ? 'text-[#30d158]' : 'text-white'}">
+              ${AR_DAYS[date.getDay()]} • ${d} ${AR_MONTHS[m - 1]} ${y}
+            </span>
+            <span class="text-[10px] text-[#8e8e93] px-2 py-0.5 rounded bg-[#1c1c1e]">
+              ${getStatusTitle(type)}
+            </span>
+          </div>
+          <div class="text-xs text-white whitespace-pre-wrap leading-relaxed pt-1">
+            ${n.text}
+          </div>
+          <div class="text-[10px] text-[#8e8e93] text-left pt-1">
+            ${n.updatedAt ? new Date(n.updatedAt).toLocaleString('ar-EG') : ''}
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  document.getElementById('memoriesSheet').classList.add('active');
+}
+
+function closeMemoriesSheet() {
+  document.getElementById('memoriesSheet').classList.remove('active');
+}
+
+document.getElementById('noteSheet').addEventListener('click', function(e) {
+  if (e.target === this) closeSheet();
+});
+document.getElementById('memoriesSheet').addEventListener('click', function(e) {
+  if (e.target === this) closeMemoriesSheet();
+});
+
+// ==========================================
+// 6. SEARCH & EXPORT
+// ==========================================
+function liveSearch() {
+  const q = document.getElementById('searchInput').value.trim().toLowerCase();
+  const box = document.getElementById('searchResultsBox');
+  if (!q) {
+    box.classList.add('hidden');
+    box.innerHTML = '';
+    return;
+  }
+
+  const notes = getNotes();
+  const matches = [];
+
+  for (const [k, n] of Object.entries(notes)) {
+    if (n.text && n.text.toLowerCase().includes(q)) {
+      const [y, m, d] = k.split('-').map(Number);
+      matches.push({ n, date: new Date(y, m - 1, d) });
+    }
+  }
+
+  box.classList.remove('hidden');
+  if (!matches.length) {
+    box.innerHTML = '<div class="text-xs text-[#8e8e93] py-2 text-center">لا توجد نتائج مطابقة</div>';
+    return;
+  }
+
+  box.innerHTML = matches.map(({ n, date }) => {
+    return `
+      <div class="p-2.5 rounded-lg bg-[#2c2c2e] cursor-pointer hover:bg-[#3a3a3c]" onclick="openDaySheet(new Date(${date.getFullYear()}, ${date.getMonth()}, ${date.getDate()}))">
+        <div class="flex justify-between text-xs text-[#8e8e93]">
+          <span class="font-semibold text-white">${AR_DAYS[date.getDay()]} ${date.getDate()} ${AR_MONTHS[date.getMonth()]} ${date.getFullYear()}</span>
+          <span>${getStatusTitle(getDayStatus(date))}</span>
+        </div>
+        <div class="text-xs text-white/90 mt-1 line-clamp-1">${n.text}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function exportData() {
+  const notes = getNotes();
+  const list = Object.entries(notes).filter(([, n]) => n.text).sort(([a], [b]) => a.localeCompare(b));
+  if (!list.length) {
+    showToast('لا توجد مذكرات لتصديرها');
+    return;
+  }
+
+  let text = 'دفتر ذكريات وقصص الحرس الجمهوري 💕\n\n';
+  for (const [k, n] of list) {
+    const [y, m, d] = k.split('-').map(Number);
+    const date = new Date(y, m - 1, d);
+    text += `• ${AR_DAYS[date.getDay()]} ${d} ${AR_MONTHS[m - 1]} ${y} (${getStatusTitle(getDayStatus(date))}):\n${n.text}\n\n`;
+  }
+
+  navigator.clipboard?.writeText(text).then(() => {
+    showToast('تم نسخ الملاحظات إلى الحافظة');
+  }).catch(() => {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([text], { type: 'text/plain;charset=utf-8' }));
+    a.download = 'ios-military-memories.txt';
+    a.click();
+    showToast('تم تحميل الملف');
+  });
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// ==========================================
+// 7. DASHBOARD & LIVE CLOCK
+// ==========================================
+function updateDashboard() {
+  const total = Math.ceil((SERVICE_END - SERVICE_START) / MS_DAY);
+  const done  = Math.max(0, Math.min(total, Math.ceil((TODAY - SERVICE_START) / MS_DAY)));
+  const left  = Math.max(0, total - done);
+  const pct   = Math.min(100, Math.max(0, (done / total) * 100));
+
+  document.getElementById('statDaysLeft').textContent = left;
+  document.getElementById('statDaysDone').textContent = done;
+  document.getElementById('pctLabel').textContent = pct.toFixed(1) + '%';
+  document.getElementById('progressBar').style.width = pct + '%';
+  document.getElementById('progressSummaryText').textContent = `انقضى ${done} يوم من أصل ${total} يوم • باقي ${left} يوم وتكتمل الخدمة 🤲`;
+
+  const notes = getNotes();
+  document.getElementById('statNotesTotal').textContent = Object.values(notes).filter(n => n.text).length;
+
+  let chk = new Date(TODAY);
+  chk.setHours(0, 0, 0, 0);
+  let nextFound = false;
+
+  for (let i = 1; i <= 20; i++) {
+    chk.setDate(chk.getDate() + 1);
+    if (getDayStatus(chk) === 'leave-start') {
+      document.getElementById('statNextLeave').textContent = `${i} يوم`;
+      document.getElementById('statNextLeaveDate').textContent = `${chk.getDate()} ${AR_MONTHS[chk.getMonth()]}`;
+      nextFound = true;
+      break;
+    }
+  }
+  if (!nextFound) {
+    document.getElementById('statNextLeave').textContent = 'اليوم';
+    document.getElementById('statNextLeaveDate').textContent = 'في الاجازة الآن 🏠';
+  }
+}
+
+function updateLiveClock() {
+  const diff = SERVICE_END - new Date();
+  if (diff <= 0) {
+    document.getElementById('cdDays').textContent = '0';
+    document.getElementById('cdHours').textContent = '00';
+    document.getElementById('cdMins').textContent = '00';
+    document.getElementById('cdSecs').textContent = '00';
+    return;
+  }
+  const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+  const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+  const s = Math.floor((diff % (1000 * 60)) / 1000);
+
+  document.getElementById('cdDays').textContent = d;
+  document.getElementById('cdHours').textContent = String(h).padStart(2, '0');
+  document.getElementById('cdMins').textContent = String(m).padStart(2, '0');
+  document.getElementById('cdSecs').textContent = String(s).padStart(2, '0');
+}
+
+// INIT
+renderMonths();
+updateDashboard();
+updateLiveClock();
+displayMessage(0);
+setInterval(updateLiveClock, 1000);
+setInterval(updateDashboard, 60000);
+</script>
+</body>
+</html>
